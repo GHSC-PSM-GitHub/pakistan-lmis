@@ -1,0 +1,64 @@
+<?php
+
+$cwh_issuance_flag = 'FALSE';
+$cwh_issuance = 0;
+
+if (!isset($fsrlevel)) {
+
+    $rscwh = mysql_query("SELECT
+	stakeholder.lvl,
+        tbl_warehouse.stkid
+FROM
+	tbl_warehouse
+INNER JOIN stakeholder ON tbl_warehouse.stkofficeid = stakeholder.stkid
+WHERE
+	tbl_warehouse.wh_id = $wh_id
+LIMIT 1");
+    $rcwh = mysql_fetch_array($rscwh);
+    $fsrlevel = $rcwh['lvl'];
+    $fsrstk1 = $rs1['stkid'];
+}
+
+$yearcheck = $yy;
+$monthcheck = $mm;
+
+ 
+    $trtrtype = 2;
+    $psid = "SELECT
+	tbl_warehouse.prov_id,
+	tbl_warehouse.stkid 
+FROM
+	tbl_warehouse 
+WHERE
+	tbl_warehouse.wh_id = $wh_id";
+  $respsid = mysql_query($psid);
+    $res = mysql_fetch_array($respsid);
+    $pid = $res['prov_id'];
+    $sid = $res['stkid'];
+ 
+        $qryCwhR = "SELECT
+	IFNULL(ABS(SUM(tbl_stock_detail.Qty)),0) Rcv
+FROM
+	tbl_stock_master
+INNER JOIN tbl_stock_detail ON tbl_stock_master.PkStockID = tbl_stock_detail.fkStockID
+INNER JOIN stock_batch ON tbl_stock_detail.BatchID = stock_batch.batch_id
+WHERE
+	tbl_stock_master.WHIDFrom = 123
+AND tbl_stock_master.WHIDTo = $wh_id
+AND tbl_stock_master.TranTypeID = 2
+AND tbl_stock_master.temp = 0
+AND stock_batch.item_id = '" . $rsRow1['itm_id'] . "'
+AND DATE_FORMAT(
+	tbl_stock_master.TranDate,
+	'%Y-%m-01'
+) = '$RptDate'";
+//        echo $qryCwhR;exit;
+
+       
+    $rsCwhR = mysql_query($qryCwhR);
+    $rCwhR = mysql_fetch_array($rsCwhR);
+    
+    if ($rCwhR['Rcv'] > 0) {
+        $cwh_issuance = $rCwhR['Rcv'];
+        $cwh_issuance_flag = 'TRUE';
+    }
